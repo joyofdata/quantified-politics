@@ -3,7 +3,7 @@ import os
 import re
 import numpy
 
-def split_png_into_segments(direction, pic_name, source_path, target_path):
+def split_png_into_segments(direction, pic_name, source_path, target_path, min_break_height=100):
 
     img = Image.open(source_path + "/" + pic_name)
 
@@ -13,7 +13,7 @@ def split_png_into_segments(direction, pic_name, source_path, target_path):
         return
 
     if direction == "h":
-        segments = segment_horizontally(img)
+        segments = segment_horizontally(img, min_break_height=min_break_height)
     elif direction == "v":
         segments = segment_vertically(img)
     else:
@@ -36,7 +36,7 @@ def split_png_into_segments(direction, pic_name, source_path, target_path):
 
             if not is_image_empty(img0):
                 part += 1
-                img0.save(target_path + "/" + base_pic_name + "_p" + str(part) + ".png")
+                img0.save(target_path + "/" + base_pic_name + "_p" + "{:02d}".format(part) + ".png")
 
 
 ####################################################################################
@@ -73,7 +73,7 @@ def halve_image(img, ratio_threshold=0.85):
     else:
         return []
 
-def quarter_image(img, ratio_threshold=0.9):
+def quarter_image(img, ratio_threshold=0.9, padding=50):
     w,h = img.size
     arr = numpy.asarray(img)
 
@@ -89,7 +89,7 @@ def quarter_image(img, ratio_threshold=0.9):
         white_pixels_in_column = max(white_columns)
 
         if white_pixels_in_column > ratio_threshold * h:
-            cut_at_x.append(int(x - margin + white_columns.index(white_pixels_in_column)))
+            cut_at_x.append(int(x - margin + white_columns.index(white_pixels_in_column))+padding)
         else:
             return []
 
