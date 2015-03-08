@@ -3,7 +3,7 @@ import os
 import re
 import numpy
 
-def split_png_into_segments(pic_name, source_path, target_path):
+def split_png_into_segments(direction, pic_name, source_path, target_path):
 
     img = Image.open(source_path + "/" + pic_name)
 
@@ -12,7 +12,12 @@ def split_png_into_segments(pic_name, source_path, target_path):
     if is_image_empty(img):
         return
 
-    segments = segment_horizontally(img)
+    if direction == "h":
+        segments = segment_horizontally(img)
+    elif direction == "v":
+        segments = segment_vertically(img)
+    else:
+        return
 
     res = re.search("^(.+)\.png$", pic_name)
     base_pic_name = res.group(1)
@@ -22,9 +27,17 @@ def split_png_into_segments(pic_name, source_path, target_path):
     else:
         part = 0
         for seg in segments:
-            part += 1
-            img0 = img.crop((0,seg[0],w,seg[1]))
-            img0.save(target_path + "/" + base_pic_name + "_p" + str(part) + ".png")
+            if direction == "h":
+                img0 = img.crop((0,seg[0],w,seg[1]))
+            elif direction == "v":
+                img0 = img.crop((seg[0],0,seg[1],h))
+            else:
+                return
+
+            if not is_image_empty(img0):
+                part += 1
+                img0.save(target_path + "/" + base_pic_name + "_p" + str(part) + ".png")
+
 
 ####################################################################################
 
@@ -44,7 +57,7 @@ def segment_vertically(img):
 
     return segments
 
-def halve_image(img):
+def halve_image(img, ratio_threshold=0.85):
     w,h = img.size
     arr = numpy.asarray(img)
 
@@ -54,13 +67,13 @@ def halve_image(img):
     non_white_columns = [(arr[:,x] < 60000).sum() for x in middle_area]
     non_white_pixels_in_column = max(non_white_columns)
 
-    if non_white_pixels_in_column > 0.9 * h:
+    if non_white_pixels_in_column > ratio_threshold * h:
         x = int(w/2-margin) + non_white_columns.index(non_white_pixels_in_column)
         return [(0, x-10), (x+10, w-1)]
     else:
         return []
 
-def quarter_image(img):
+def quarter_image(img, ratio_threshold=0.9):
     w,h = img.size
     arr = numpy.asarray(img)
 
@@ -75,7 +88,7 @@ def quarter_image(img):
         white_columns = [(arr[:,x] > 60000).sum() for x in area_to_check_out]
         white_pixels_in_column = max(white_columns)
 
-        if white_pixels_in_column > 0.9 * h:
+        if white_pixels_in_column > ratio_threshold * h:
             cut_at_x.append(int(x - margin + white_columns.index(white_pixels_in_column)))
         else:
             return []
