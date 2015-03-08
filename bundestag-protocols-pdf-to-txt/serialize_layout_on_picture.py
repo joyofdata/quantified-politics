@@ -35,15 +35,18 @@ def segment_vertically(img):
     if h < 220:
         return []
 
-    segments = halve_image()
+    segments = halve_image(img)
     
     if len(segments) == 0:
-        segments = quarter_image()
+        segments = quarter_image(img)
+
+    print(segments)
 
     return segments
 
 def halve_image(img):
     w,h = img.size
+    arr = numpy.asarray(img)
 
     margin = w * 0.03
     middle_area = range(int(w/2-margin), int(w/2+margin))
@@ -52,13 +55,34 @@ def halve_image(img):
     non_white_pixels_in_column = max(non_white_columns)
 
     if non_white_pixels_in_column > 0.9 * h:
-        y = int(w/2-margin) + non_white_columns.index(non_white_pixels_in_column)
-        return [(0, y-10), (y+10, w-1)]
+        x = int(w/2-margin) + non_white_columns.index(non_white_pixels_in_column)
+        return [(0, x-10), (x+10, w-1)]
     else:
         return []
 
 def quarter_image(img):
     w,h = img.size
+    arr = numpy.asarray(img)
+
+    margin = w * 0.03
+    tolerated_deviation = range(-int(margin), int(margin))
+
+    xs_where_quarters_touch = [int(w/4),int(w/2),int(3/4 * w)]
+
+    cut_at_x = []
+    for x in xs_where_quarters_touch:
+        area_to_check_out = [x + tol for tol in tolerated_deviation]
+        white_columns = [(arr[:,x] > 60000).sum() for x in area_to_check_out]
+        white_pixels_in_column = max(white_columns)
+
+        if white_pixels_in_column > 0.9 * h:
+            cut_at_x.append(int(x - margin + white_columns.index(white_pixels_in_column)))
+        else:
+            return []
+
+    segments = list(zip([0]+cut_at_x, cut_at_x+[w]))
+    
+    return segments
 
 ####################################################################################
 
