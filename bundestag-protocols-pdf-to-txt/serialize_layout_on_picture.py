@@ -3,7 +3,11 @@ import os
 import re
 import numpy
 
-def split_png_into_segments(direction, pic_name, source_path, target_path, min_break_height=100, prevent_cut_through_vline=False):
+def split_png_into_segments(direction, pic_name, source_path, target_path, 
+        min_break_height=100, 
+        prevent_cut_through_vline=False,
+        ratio_threshold_halve=0.85,
+        ratio_threshold_quarter=0.99):
 
     img = Image.open(source_path + "/" + pic_name)
 
@@ -12,8 +16,7 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
     if is_image_empty(img):
         return
 
-    clrs = img.getcolors()
-    white = max([c for (n,c) in clrs])
+    white = white_value(img)
     color_threshold = int(white * 0.9)
 
     if direction == "h":
@@ -22,7 +25,10 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
                 color_threshold=color_threshold, 
                 prevent_cut_through_vline=prevent_cut_through_vline)
     elif direction == "v":
-        segments = segment_vertically(img, color_threshold=color_threshold)
+        segments = segment_vertically(img, 
+                color_threshold=color_threshold,
+                ratio_threshold_halve=ratio_threshold_halve,
+                ratio_threshold_quarter=ratio_threshold_quarter)
     else:
         return
 
@@ -48,17 +54,26 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
 
 ####################################################################################
 
-def segment_vertically(img, color_threshold=60000):
+def segment_vertically(img, 
+        color_threshold=60000, 
+        ratio_threshold_halve=0.85,
+        ratio_threshold_quarter=0.99):
     w,h = img.size 
 
     # minimum height of three lines of standard text
     if h < 220:
         return []
 
-    segments = halve_image(img, color_threshold=color_threshold)
+    segments = halve_image(img, 
+                color_threshold=color_threshold,
+                ratio_threshold=ratio_threshold_halve
+            )
     
     if len(segments) == 0:
-        segments = quarter_image(img, color_threshold=color_threshold)
+        segments = quarter_image(img, 
+                    color_threshold=color_threshold,
+                    ratio_threshold=ratio_threshold_quarter
+                )
 
     print(segments)
 
@@ -176,3 +191,7 @@ def rolling_window(a, window):
     shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
     strides = a.strides + (a.strides[-1],)
     return numpy.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
+
+def white_value(img):
+    clrs = img.getcolors()
+    return max([c for (n,c) in clrs])
