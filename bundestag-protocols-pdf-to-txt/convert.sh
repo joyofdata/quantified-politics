@@ -16,11 +16,13 @@ mkdir txts
 
 pages=$(pdfinfo $pdf | grep "Pages" | egrep -o "[0-9]+")
 pages="$[$pages-1]"
+pages="5"
 
 for p in `eval echo {0..$pages..1}`
 do
     num=$(printf "%03d" $p)
-    convert -density 500 -crop 3328x4840+450+540 $pdf[$p] -quality 100 -colorspace Gray -flatten imgs0/$pdf-$num.png
+    convert -density 500 $pdf[$p] -quality 100 -colorspace Gray -flatten imgs0/$pdf-$num.png
+    convert -crop 3328x4840+450+540 imgs0/$pdf-$num.png -quality 100 imgs0/$pdf-$num.png
 done
 
 # split PNGs horizontally if necessary
