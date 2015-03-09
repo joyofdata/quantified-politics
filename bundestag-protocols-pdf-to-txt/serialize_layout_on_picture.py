@@ -23,7 +23,7 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
     base_pic_name = res.group(1)
 
     if len(segments) == 0:
-        img.save(target_path + "/" + base_pic_name + "_p1.png")
+        img.save(target_path + "/" + base_pic_name + "_p01.png")
     else:
         part = 0
         for seg in segments:
@@ -99,7 +99,7 @@ def quarter_image(img, ratio_threshold=0.9, padding=50):
 
 ####################################################################################
 
-def segment_horizontally(img, min_break_height=100, clr_threshold=60000, ratio_threshold=0.995, padding=10):
+def segment_horizontally(img, min_break_height=100, clr_threshold=60000, ratio_threshold=0.99, padding=10):
     w,h = img.size
 
     arr = numpy.asarray(img)
@@ -111,19 +111,24 @@ def segment_horizontally(img, min_break_height=100, clr_threshold=60000, ratio_t
     looking_for_start_of_break = True
     y_breaks = []
     y = -1
-    while y < h:
+    while y < (h-1):
         y += 1
-        if h > y + min_break_height + 1:
-            if sum(sps[y:(y+min_break_height)]) == min_break_height:
-                if looking_for_start_of_break:
-                    y_breaks.append(y+padding)
-                    looking_for_start_of_break = False
-                else:
-                    if not sps[y+min_break_height+1]:
-                        y_breaks.append(y+min_break_height+1-padding)
-                        looking_for_start_of_break = True
-                        y = y+min_break_height
+
+        if not h > y + min_break_height + 1 and looking_for_start_of_break:
+            break
+
+        if sum(sps[y:(y+min_break_height)]) == min_break_height and \
+           looking_for_start_of_break:
+                y_breaks.append(y+padding)
+                looking_for_start_of_break = False
+                y = y + min_break_height
+        elif not looking_for_start_of_break and \
+             not sps[y]:
+                y_breaks.append(y-padding)
+                looking_for_start_of_break = True
    
+    print(y_breaks)
+
     if len(y_breaks) > 0:
         if y_breaks[0] > 10:
             y_breaks = [0] + y_breaks
@@ -137,7 +142,7 @@ def segment_horizontally(img, min_break_height=100, clr_threshold=60000, ratio_t
 
     y_content = list(zip(y_breaks[0::2], y_breaks[1::2]))
 
-    #print(y_content)
+    print(y_content)
     
     return y_content
 
