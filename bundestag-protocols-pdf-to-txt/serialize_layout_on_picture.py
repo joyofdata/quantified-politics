@@ -12,10 +12,14 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
     if is_image_empty(img):
         return
 
+    clrs = img.getcolors()
+    white = max([c for (n,c) in clrs])
+    color_threshold = int(white * 0.9)
+
     if direction == "h":
-        segments = segment_horizontally(img, min_break_height=min_break_height)
+        segments = segment_horizontally(img, min_break_height=min_break_height, color_threshold=color_threshold)
     elif direction == "v":
-        segments = segment_vertically(img)
+        segments = segment_vertically(img, color_threshold=color_threshold)
     else:
         return
 
@@ -41,30 +45,30 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
 
 ####################################################################################
 
-def segment_vertically(img):
+def segment_vertically(img, color_threshold=60000):
     w,h = img.size 
 
     # minimum height of three lines of standard text
     if h < 220:
         return []
 
-    segments = halve_image(img)
+    segments = halve_image(img, color_threshold=color_threshold)
     
     if len(segments) == 0:
-        segments = quarter_image(img)
+        segments = quarter_image(img, color_threshold=color_threshold)
 
     print(segments)
 
     return segments
 
-def halve_image(img, ratio_threshold=0.85):
+def halve_image(img, ratio_threshold=0.85, color_threshold=60000):
     w,h = img.size
     arr = numpy.asarray(img)
 
     margin = w * 0.03
     middle_area = range(int(w/2-margin), int(w/2+margin))
     
-    non_white_columns = [(arr[:,x] < 60000).sum() for x in middle_area]
+    non_white_columns = [(arr[:,x] < color_threshold).sum() for x in middle_area]
     non_white_pixels_in_column = max(non_white_columns)
 
     if non_white_pixels_in_column > ratio_threshold * h:
@@ -73,7 +77,7 @@ def halve_image(img, ratio_threshold=0.85):
     else:
         return []
 
-def quarter_image(img, ratio_threshold=0.9, padding=50):
+def quarter_image(img, ratio_threshold=0.9, padding=50, color_threshold=60000):
     w,h = img.size
     arr = numpy.asarray(img)
 
@@ -85,7 +89,7 @@ def quarter_image(img, ratio_threshold=0.9, padding=50):
     cut_at_x = []
     for x in xs_where_quarters_touch:
         area_to_check_out = [x + tol for tol in tolerated_deviation]
-        white_columns = [(arr[:,x] > 60000).sum() for x in area_to_check_out]
+        white_columns = [(arr[:,x] > color_threshold).sum() for x in area_to_check_out]
         white_pixels_in_column = max(white_columns)
 
         if white_pixels_in_column > ratio_threshold * h:
@@ -99,14 +103,14 @@ def quarter_image(img, ratio_threshold=0.9, padding=50):
 
 ####################################################################################
 
-def segment_horizontally(img, min_break_height=100, clr_threshold=60000, ratio_threshold=0.99, padding=10):
+def segment_horizontally(img, min_break_height=100, color_threshold=60000, ratio_threshold=0.99, padding=10):
     w,h = img.size
 
     arr = numpy.asarray(img)
 
     # element at n is True if row at y=n contains
     # sufficiently many sufficiently white pixels
-    sps = [((arr[y,:] > clr_threshold).sum()/w > ratio_threshold) for y in range(h)]
+    sps = [((arr[y,:] > color_threshold).sum()/w > ratio_threshold) for y in range(h)]
 
     looking_for_start_of_break = True
     y_breaks = []
