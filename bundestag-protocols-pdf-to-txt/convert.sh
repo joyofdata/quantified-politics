@@ -1,6 +1,6 @@
 #! /bin/bash
 
-pdf=18091.pdf
+pdf=18001.pdf
 
 mkdir imgs0
 mkdir imgs1
@@ -20,7 +20,7 @@ pages="$[$pages-1]"
 for p in `eval echo {0..$pages..1}`
 do
     num=$(printf "%03d" $p)
-    convert -density 500 -crop 3328x4840+450+540 $pdf[$p] -quality 100 -colorspace Gray imgs0/$pdf-$num.png
+    convert -density 500 -crop 3328x4840+450+540 $pdf[$p] -quality 100 -colorspace Gray -flatten imgs0/$pdf-$num.png
 done
 
 # split PNGs horizontally if necessary
@@ -33,6 +33,6 @@ do
     tesseract imgs3/$bn txts/$bn -l deu bazaar
 done
 
-cat txts/* > $pdf.txt
+#cat txts/* > $pdf.txt
 
 #sed -i -e ':a;N;$!ba;s/-\n//g' $pdf.txt
