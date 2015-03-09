@@ -3,7 +3,7 @@ import os
 import re
 import numpy
 
-def split_png_into_segments(direction, pic_name, source_path, target_path, min_break_height=100):
+def split_png_into_segments(direction, pic_name, source_path, target_path, min_break_height=100, prevent_cut_through_vline=False):
 
     img = Image.open(source_path + "/" + pic_name)
 
@@ -17,7 +17,10 @@ def split_png_into_segments(direction, pic_name, source_path, target_path, min_b
     color_threshold = int(white * 0.9)
 
     if direction == "h":
-        segments = segment_horizontally(img, min_break_height=min_break_height, color_threshold=color_threshold)
+        segments = segment_horizontally(img, 
+                min_break_height=min_break_height, 
+                color_threshold=color_threshold, 
+                prevent_cut_through_vline=prevent_cut_through_vline)
     elif direction == "v":
         segments = segment_vertically(img, color_threshold=color_threshold)
     else:
@@ -77,12 +80,12 @@ def halve_image(img, ratio_threshold=0.85, color_threshold=60000):
     else:
         return []
 
-def quarter_image(img, ratio_threshold=0.9, padding=50, color_threshold=60000):
+def quarter_image(img, ratio_threshold=0.99, padding=50, color_threshold=60000):
     w,h = img.size
     arr = numpy.asarray(img)
 
-    margin = w * 0.03
-    tolerated_deviation = range(-int(margin), int(margin))
+    margin = int(w * 0.03)
+    tolerated_deviation = range(-margin, margin)
 
     xs_where_quarters_touch = [int(w/4),int(w/2),int(3/4 * w)]
 
@@ -103,7 +106,7 @@ def quarter_image(img, ratio_threshold=0.9, padding=50, color_threshold=60000):
 
 ####################################################################################
 
-def segment_horizontally(img, min_break_height=100, color_threshold=60000, ratio_threshold=0.99, padding=10):
+def segment_horizontally(img, min_break_height=100, color_threshold=60000, ratio_threshold=0.99, padding=10, prevent_cut_through_vline=False):
     w,h = img.size
 
     arr = numpy.asarray(img)
@@ -111,6 +114,19 @@ def segment_horizontally(img, min_break_height=100, color_threshold=60000, ratio
     # element at n is True if row at y=n contains
     # sufficiently many sufficiently white pixels
     sps = [((arr[y,:] > color_threshold).sum()/w > ratio_threshold) for y in range(h)]
+
+    if prevent_cut_through_vline:
+        margin = int(w * 0.03)
+        middle = int(w/2)
+        arr0 = arr[:,(middle-margin):(middle+margin)]
+        black_rows = numpy.amax(arr0 < color_threshold, axis=1)
+        preceding_black_line0 = numpy.sum(rolling_window(black_rows, min_break_height), 1) == min_break_height
+        preceding_black_line = numpy.concatenate([
+                    [False]*(min_break_height-1),
+                    preceding_black_line0
+            ])
+
+        sps = numpy.logical_and(sps, numpy.logical_not(preceding_black_line))
 
     looking_for_start_of_break = True
     y_breaks = []
@@ -154,3 +170,9 @@ def segment_horizontally(img, min_break_height=100, color_threshold=60000, ratio
 
 def is_image_empty(im):
     return len(im.getcolors()) == 1
+
+def rolling_window(a, window):
+    # http://stackoverflow.com/questions/6811183/rolling-window-for-1d-arrays-in-numpy
+    shape = a.shape[:-1] + (a.shape[-1] - window + 1, window)
+    strides = a.strides + (a.strides[-1],)
+    return numpy.lib.stride_tricks.as_strided(a, shape=shape, strides=strides)
