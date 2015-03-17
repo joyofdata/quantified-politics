@@ -7,7 +7,8 @@ def split_png_into_segments(direction, pic_name, source_path, target_path,
         min_break_height=100, 
         prevent_cut_through_vline=False,
         ratio_threshold_halve=0.85,
-        ratio_threshold_quarter=0.99):
+        ratio_threshold_quarter=0.99,
+        ratio_threshold_horizontally=0.99):
 
     img = Image.open(source_path + "/" + pic_name)
 
@@ -23,7 +24,8 @@ def split_png_into_segments(direction, pic_name, source_path, target_path,
         segments = segment_horizontally(img, 
                 min_break_height=min_break_height, 
                 color_threshold=color_threshold, 
-                prevent_cut_through_vline=prevent_cut_through_vline)
+                prevent_cut_through_vline=prevent_cut_through_vline,
+                ratio_threshold=ratio_threshold_horizontally)
     elif direction == "v":
         segments = segment_vertically(img, 
                 color_threshold=color_threshold,
@@ -32,7 +34,7 @@ def split_png_into_segments(direction, pic_name, source_path, target_path,
     else:
         return
 
-    res = re.search("^(.+)\.png$", pic_name)
+    res = re.search("^(.+)\.[png|tif]$", pic_name)
     base_pic_name = res.group(1)
 
     if len(segments) == 0:
