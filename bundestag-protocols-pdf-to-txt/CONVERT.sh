@@ -1,18 +1,24 @@
 #! /bin/bash
 
+# ./CONVERT.sh [PDF name] [absolute path] [todo index: 0-4]
+
 pdf=$1
 
-# $2:
+folder=$2
+
+# $todo:
 # 0: from PDF to PNG
 # 1: from h1 on
 # 2: from v on
 # 3: from h2 on
 # 4: only PNG to TXT
 
+todo=$3
+
 # PDF to PNG
-if [ "$2" -eq 0 ]; then
-    rm -rf processing/imgs0
-    mkdir processing/imgs0
+if [ "$todo" -eq 0 ]; then
+    rm -rf $folder/imgs0
+    mkdir $folder/imgs0
 
     # convert PDF to set of cropped PNGs
     
@@ -20,62 +26,64 @@ if [ "$2" -eq 0 ]; then
     # convert -density 500 -crop 3328x4840+450+540 $pdf -quality 100 -colorspace Gray imgs0/$pdf.png
     # rename 's/-(\d+)/sprintf("-%03d",$1)/e' imgs0/*
     
-    pages=$(pdfinfo processing/$pdf | grep "Pages" | egrep -o "[0-9]+")
+    pages=$(pdfinfo $folder/$pdf | grep "Pages" | egrep -o "[0-9]+")
     pages="$[$pages-1]"
     
     for p in `eval echo {0..$pages..1}`
     do
         num=$(printf "%03d" $p)
-        convert -density 500 processing/$pdf[$p] -quality 100 -colorspace Gray -flatten processing/imgs0/$pdf-$num.png
-        convert -crop 3328x4840+450+540 processing/imgs0/$pdf-$num.png -quality 100 processing/imgs0/$pdf-$num.png
+        convert -density 500 $folder/$pdf[$p] -quality 100 -colorspace Gray -flatten $folder/imgs0/$pdf-$num.png
+        convert -crop 3328x4840+450+540 $folder/imgs0/$pdf-$num.png -quality 100 $folder/imgs0/$pdf-$num.png
     done
 fi
 
-if [ "$2" -le 3 ]; then
+if [ "$todo" -le 3 ]; then
 
-    if [ "$2" -eq 1 ]; then
-        rm -rf processing/imgs1
-        mkdir processing/imgs1
+    if [ "$todo" -le 1 ]; then
+        rm -rf $folder/imgs1
+        mkdir $folder/imgs1
 
-        rm -rf processing/imgs2
-        mkdir processing/imgs2
+        rm -rf $folder/imgs2
+        mkdir $folder/imgs2
 
-        rm -rf processing/imgs3
-        mkdir processing/imgs3
+        rm -rf $folder/imgs3
+        mkdir $folder/imgs3
 
         x="h1"
     fi
 
-    if [ "$2" -eq 2 ]; then
-        rm -rf processing/imgs2
-        mkdir processing/imgs2
+    if [ "$todo" -eq 2 ]; then
+        rm -rf $folder/imgs2
+        mkdir $folder/imgs2
 
-        rm -rf processing/imgs3
-        mkdir processing/imgs3
+        rm -rf $folder/imgs3
+        mkdir $folder/imgs3
 
         x="v"
     fi
 
-    if [ "$2" -eq 3 ]; then
-        rm -rf processing/imgs3
-        mkdir processing/imgs3
+    if [ "$todo" -eq 3 ]; then
+        rm -rf $folder/imgs3
+        mkdir $folder/imgs3
 
         x="h2"
     fi
 
     # split PNGs horizontally if necessary
-    python3 apply_serialization_of_layout.py $x
+    python3 apply_serialization_of_layout.py $x $folder 
 fi
 
 
-if [ "$2" -ge 4 ]; then
-    rm -rf processing/txts
-    mkdir processing/txts
+if [ "$todo" -le 4 ]; then
+    rm -rf $folder/txts
+    mkdir $folder/txts
 
     # OCR PNGs to text
-    for png in processing/imgs3/*.png
+    for png in $folder/imgs3/*.png
     do
         bn=$(basename $png)
-        tesseract processing/imgs3/$bn processing/txts/$bn -l deu bazaar
+        tesseract $folder/imgs3/$bn $folder/txts/$bn -l deu bazaar
     done
+
+    mv $folder/txts $folder/txt_$pdf
 fi
