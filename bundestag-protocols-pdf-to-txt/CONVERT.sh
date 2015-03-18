@@ -33,7 +33,7 @@ if [ "$todo" -eq 0 ]; then
     do
         num=$(printf "%03d" $p)
         convert -density 500 $folder/$pdf[$p] -quality 100 -colorspace Gray -flatten $folder/imgs0/$pdf-$num.png
-        convert -crop 3328x4840+450+540 $folder/imgs0/$pdf-$num.png -quality 100 $folder/imgs0/$pdf-$num.png
+        convert -crop 3428x4940+400+490 $folder/imgs0/$pdf-$num.png -quality 100 $folder/imgs0/$pdf-$num.png
     done
 fi
 
