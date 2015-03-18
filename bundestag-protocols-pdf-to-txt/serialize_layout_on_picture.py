@@ -34,7 +34,7 @@ def split_png_into_segments(direction, pic_name, source_path, target_path,
     else:
         return
 
-    res = re.search("^(.+)\.[png|tif]$", pic_name)
+    res = re.search("^(.+)\.png$", pic_name)
     base_pic_name = res.group(1)
 
     if len(segments) == 0:
