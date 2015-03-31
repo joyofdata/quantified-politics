@@ -1,0 +1,11 @@
+<protocol period=18 session=15 date="2014-02-14">
+    <content>
+    </content>
+    <showtime start="09:00" end="13:39">
+        <speech speakerId="1234">
+        </speech>
+        <inter
+    </showtime>
+    <annex>
+    </annex>
+</protocol>

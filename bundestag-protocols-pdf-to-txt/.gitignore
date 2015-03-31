@@ -1,3 +1,4 @@
 processing*
 __pycache__
 .*
+data/
