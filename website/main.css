@@ -1,0 +1,58 @@
+body {
+  padding-top: 100px;
+}
+.starter-template {
+  padding: 40px 15px;
+  text-align: center;
+}
+
+div.container {
+    margin-top: 40px;
+}
+
+div.container h1 {
+    margin-bottom: 20px;
+}
+
+.thumbnail {
+    height: 200px;
+}
+
+#data-table {
+    overflow:auto;
+    height: 300px;
+}
+
+#data-table table {
+    width: 100%;
+}
+
+div#data-table table tr td,
+div#data-table table tr th {
+    border: 1px solid white;
+    padding: 3px;
+}
+
+.cducsu {
+    background-color: rgb(208, 208, 208);
+}
+
+.spd {
+    background-color: rgb(255, 168, 168);
+}
+
+.gruene {
+    background-color: rgb(179, 237, 179);
+}
+
+.linke {
+    background-color: rgb(255, 203, 255);
+}
+
+a {
+}
+
+.glyphicon-question-sign {
+    font-size: 15px;
+    vertical-align: middle;
+}
