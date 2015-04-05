@@ -14,7 +14,8 @@ mapping = {
     "Scheuer, Dr. Andreas": "Scheuer, Andreas",
     "Verlinden, Julia": "Verlinden, Dr. Julia",
     "Bartz, Julia": "Obermeier, Julia",
-    "Neskovic, Wolfgang": "Nešković, Wolfgang"
+    "Neskovic, Wolfgang": "Nešković, Wolfgang",
+    "Engelmeier-Heite, Michaela": "Engelmeier, Michaela"
 }
 
 def apply_mapping_to_db(mapping, key, db_config):
