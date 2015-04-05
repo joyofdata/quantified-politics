@@ -1,0 +1,22 @@
+﻿select
+	mem.name, id_member, avg_diff, n
+from (
+	select
+		id_member,
+		avg(diff) as avg_diff,
+		count(*) as n
+	from (
+		select
+			id_member,
+			abs(opinion - type) as diff
+		from bundestag_votings_individual indiv
+		join temp_tbl temp
+			on temp.party = indiv.party
+				and temp.id_meta = indiv.id_meta
+		where type <> -10
+	) t
+	group by id_member
+) s
+join bundestag_members as mem
+	on mem.id = s.id_member
+order by avg_diff desc
